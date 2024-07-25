@@ -37,53 +37,61 @@
         return Math.floor(Math.random() * 1000000); // Generate a random number between 0 and 999999
       }
 
-      // Prebid.js configuration
-      var adUnits = [{
-        code: 'video-ad-unit',
-        mediaTypes: {
-          video: {
-            context: 'instream',
-            playerSize: [640, 360]
-          }
-        },
-        bids: [{
-          bidder: 'appnexus',
-          params: {
-            placementId: '12345678'
-          }
-        }]
-      }];
-
-      var pbjs = pbjs || {};
-      pbjs.que = pbjs.que || [];
-      
-      pbjs.que.push(function() {
-        pbjs.addAdUnits(adUnits);
-        pbjs.requestBids({
-          bidsBackHandler: function(bidResponses) {
-            var adTagUrl = 'https://pubads.g.doubleclick.net/gampad/ads?iu=/1234567890/ad_unit&description_url=[optional]&env=vp&output=vast&sz=640x360&unviewed_position_start=1&url=[referrer_url]&correlator=[timestamp]&cust_params=' + encodeURIComponent('randomNumber=' + getRandomNumber());
-            
-            var winningBid = pbjs.getHighestCpmBids('video-ad-unit')[0];
-            if (winningBid) {
-              adTagUrl += '&hb_bidder=' + winningBid.bidder + '&hb_adid=' + winningBid.adId + '&hb_pb=' + winningBid.cpm;
+      // Function to get ad tag URL with Prebid.js integration
+      function getAdTagUrl(callback) {
+        var adUnits = [{
+          code: 'video-ad-unit',
+          mediaTypes: {
+            video: {
+              context: 'instream',
+              playerSize: [640, 360]
             }
+          },
+          bids: [{
+            bidder: 'appnexus',
+            params: {
+              placementId: '12345678'
+            }
+          }]
+        }];
 
-            player.ima({
-              adTagUrl: adTagUrl
-            });
-
-            // Setup player event handlers
-            player.on('readyforpreroll', function() {
-              player.ima.requestAds();
-            });
-
-            player.ready(function() {
-              player.ima.initializeAdDisplayContainer();
-              player.ima.requestAds();
-              player.play();
-            });
-          }
+        pbjs.que = pbjs.que || [];
+        pbjs.que.push(function() {
+          pbjs.addAdUnits(adUnits);
+          pbjs.requestBids({
+            bidsBackHandler: function(bidResponses) {
+              var adTagUrl = 'https://pubads.g.doubleclick.net/gampad/ads?iu=/1234567890/ad_unit&description_url=[optional]&env=vp&output=vast&sz=640x360&unviewed_position_start=1&url=[referrer_url]&correlator=[timestamp]&cust_params=' + encodeURIComponent('randomNumber=' + getRandomNumber());
+              
+              var winningBid = pbjs.getHighestCpmBids('video-ad-unit')[0];
+              if (winningBid) {
+                adTagUrl += '&hb_bidder=' + winningBid.bidder + '&hb_adid=' + winningBid.adId + '&hb_pb=' + winningBid.cpm;
+              }
+              callback(adTagUrl);
+            }
+          });
         });
+      }
+
+      // Function to initialize and request ads
+      function requestAds() {
+        getAdTagUrl(function(adTagUrl) {
+          player.ima({
+            adTagUrl: adTagUrl
+          });
+
+          player.ima.initializeAdDisplayContainer();
+          player.ima.requestAds();
+        });
+      }
+
+      // Setup player event handlers
+      player.ready(function() {
+        requestAds();
+        player.play();
+      });
+
+      player.on('play', function() {
+        requestAds();
       });
     });
   </script>
