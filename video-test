@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video.js with IMA SDK and Prebid.js</title>
+  <link href="https://vjs.zencdn.net/7.17.0/video-js.css" rel="stylesheet">
+  <style>
+    .video-js {
+      width: 640px;
+      height: 360px;
+    }
+  </style>
+</head>
+<body>
+  <video id="my-video" class="video-js vjs-default-skin" controls preload="auto">
+    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+  </video>
+
+  <!-- Include Video.js library -->
+  <script src="https://vjs.zencdn.net/7.17.0/video.min.js"></script>
+  <!-- Include IMA SDK library -->
+  <script src="https://imasdk.googleapis.com/js/sdkloader/ima3.js"></script>
+  <!-- Include Video.js ads plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/videojs-contrib-ads@6.8.0/dist/videojs.ads.min.js"></script>
+  <!-- Include Video.js IMA plugin -->
+  <script src="https://cdn.jsdelivr.net/npm/videojs-ima@1.7.0/dist/videojs.ima.min.js"></script>
+  <!-- Include Prebid.js library -->
+  <script src="https://acdn.adnxs.com/prebid/not-for-prod/1/prebid.js"></script>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      var player = videojs('my-video');
+
+      // Function to generate a random number
+      function getRandomNumber() {
+        return Math.floor(Math.random() * 1000000); // Generate a random number between 0 and 999999
+      }
+
+      // Prebid.js configuration
+      var adUnits = [{
+        code: 'video-ad-unit',
+        mediaTypes: {
+          video: {
+            context: 'instream',
+            playerSize: [640, 360]
+          }
+        },
+        bids: [{
+          bidder: 'appnexus',
+          params: {
+            placementId: '12345678'
+          }
+        }]
+      }];
+
+      var pbjs = pbjs || {};
+      pbjs.que = pbjs.que || [];
+      
+      pbjs.que.push(function() {
+        pbjs.addAdUnits(adUnits);
+        pbjs.requestBids({
+          bidsBackHandler: function(bidResponses) {
+            var adTagUrl = 'https://pubads.g.doubleclick.net/gampad/ads?iu=/1234567890/ad_unit&description_url=[optional]&env=vp&output=vast&sz=640x360&unviewed_position_start=1&url=[referrer_url]&correlator=[timestamp]&cust_params=' + encodeURIComponent('randomNumber=' + getRandomNumber());
+            
+            var winningBid = pbjs.getHighestCpmBids('video-ad-unit')[0];
+            if (winningBid) {
+              adTagUrl += '&hb_bidder=' + winningBid.bidder + '&hb_adid=' + winningBid.adId + '&hb_pb=' + winningBid.cpm;
+            }
+
+            player.ima({
+              adTagUrl: adTagUrl
+            });
+
+            // Setup player event handlers
+            player.on('readyforpreroll', function() {
+              player.ima.requestAds();
+            });
+
+            player.ready(function() {
+              player.ima.initializeAdDisplayContainer();
+              player.ima.requestAds();
+              player.play();
+            });
+          }
+        });
+      });
+    });
+  </script>
+</body>
+</html>
