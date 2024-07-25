@@ -14,7 +14,7 @@
 </head>
 <body>
   <video id="my-video" class="video-js vjs-default-skin" controls preload="auto">
-    <source src="https://www.w3schools.com/html/mov_bbb.mp4" type="video/mp4">
+    <source src="https://archive.org/download/BigBuckBunny_328/BigBuckBunny_512kb.mp4" type="video/mp4">
   </video>
 
   <!-- Include Video.js library -->
@@ -71,18 +71,15 @@
               var dayOfWeek = getDayOfWeek();
               var adTagUrl = 'https://pubads.g.doubleclick.net/gampad/ads' +
                              '?iu=/21775744923/external/single_ad_samples' +
-                             '&description_url=[optional]' +
-                             '&env=vp' +
+                             '&sz=640x480' +
+                             '&cust_params=' + encodeURIComponent('sample_ct=linear&dayOfWeek=' + dayOfWeek) +
+                             '&ciu_szs=300x250,728x90' +
                              '&gdfp_req=1' +
                              '&output=vast' +
-                             '&sz=640x480' +
                              '&unviewed_position_start=1' +
-                             '&url=[referrer_url]' +
-                             '&vpa=1' +
-                             '&vpmute=0' +
-                             '&wta=1' +
-                             '&correlator=' + correlator +
-                             '&cust_params=' + encodeURIComponent('dayOfWeek=' + dayOfWeek);
+                             '&env=vp' +
+                             '&impl=s' +
+                             '&correlator=' + correlator;
 
               var winningBid = pbjs.getHighestCpmBids('video-ad-unit')[0];
               if (winningBid) {
